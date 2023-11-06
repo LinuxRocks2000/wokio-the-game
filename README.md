@@ -10,4 +10,4 @@ presented, albeit in a humorous light. There's also foul language and sexually s
 
 Made in jest, keep smiling.
 
-<small>There is no license on this project. Do whatever you want with it.</small>
+*There is no license on this project. Do whatever you want with it. Made by me and the homiez.*

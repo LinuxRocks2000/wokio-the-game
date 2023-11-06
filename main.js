@@ -97,180 +97,6 @@ class InputManager {
 }
 
 
-class GameObject extends PhysicsObject { // superclass
-    constructor(game, x, y, width, height, type) {
-        super(game, x, y, width, height, type);
-        this.needsArtRefresh = true;
-        this.prerendered = true;
-    }
-
-    draw(delta) { // low-level function: do not override
-        if (this.prerendered) {
-            var prer = getPrerender(this.constructor.name, this.width, this.height);
-            if (this.needsArtRefresh) {
-                this.prerender(prer.ctx);
-                this.needsArtRefresh = false;
-            }
-            this.game.ctx.drawImage(prer.canvas, this.x, this.y);
-        }
-        else {
-            this.game.ctx.translate(this.x, this.y);
-            this.animate(this.game.ctx, delta);
-            this.game.ctx.translate(-this.x, -this.y);
-        }
-    }
-
-    animate() {
-
-    }
-
-    prerender() {
-
-    }
-}
-
-
-class TilingWorker {
-    constructor (ctx, type, x, y, game) {
-        this.ctx = ctx;
-        this.surroundings = game.objects;
-        this.tilesize = game.blockSize;
-        this.cursorX = 0;
-        this.cursorY = 0;
-        this.type = type;
-        this.w = 0; // used for guessing
-        this.h = 0;
-        this.x = x;
-        this.y = y;
-    }
-
-    setCursor(x, y) {
-        this.cursorX = x;
-        this.cursorY = y;
-    }
-
-    flatColor(color, x, y) {
-        this.ctx.fillStyle = color;
-        if (x == undefined) {
-            x = this.cursorX;
-            y = this.cursorY;
-        }
-        this.ctx.fillRect(x * this.tilesize, y * this.tilesize, this.tilesize, this.tilesize);
-    }
-
-    iterative(rootX, rootY, wcount, hcount, f) {
-        this.w = wcount;
-        this.h = hcount;
-        for (var x = 0; x < wcount; x ++) {
-            for (var y = 0; y < hcount; y ++) {
-                this.setCursor(rootX + x, rootY + y);
-                f(x, y);
-            }
-        }
-    }
-
-    squareIsUs(x, y) {
-        if (x >= 0 && x < this.w && y >= 0 && y < this.h) {
-            return true;
-        }
-        for (var i = 0; i < this.surroundings.length; i ++) {
-            var item = this.surroundings[i];
-            if (item.constructor.name == this.type) {
-                var relX = item.x - this.x;
-                var relY = item.y - this.y;
-                relX /= this.tilesize;
-                relY /= this.tilesize;
-                var relW = item.width/this.tilesize;
-                var relH = item.height/this.tilesize;
-                if (x >= relX && x < relX + relW && y >= relY && y < relY + relH) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    /*shell(size, x, y) {
-        if (x == undefined) {
-            x = this.cursorX;
-            y = this.cursorY;
-        }
-        var rootX = x - size - 1;
-        var rootY = y - size - 1;
-        var ret = 0;
-        var sideLength = size + 2;
-        for (var i = 0; i < sideLength; i ++) {
-            if (this.squareIsUs(rootX + i, rootY)) {
-                ret ++;
-            }
-            if (this.squareIsUs(rootX + sideLength, rootY + i)){
-                ret ++;
-            }
-            if (this.squareIsUs(rootX + sideLength - i, rootY + sideLength)) {
-                ret ++;
-            }
-            if (this.squareIsUs(rootX, rootY + sideLength - i)) {
-                ret ++;
-            }
-        }
-        return (size + 2) * 4 - ret;
-    }*/
-    shell(size, x, y) {
-        if (x == undefined) {
-            x = this.cursorX;
-            y = this.cursorY;
-        }
-        var rootX = x - size - 1;
-        var rootY = y - size - 1;
-        var ret = 0;
-        var sideLength = (size + 1) * 2;
-        for (var i = 0; i < sideLength; i ++) {
-            if (!this.squareIsUs(rootX + i, rootY)) {
-                ret ++;
-            }
-            if (!this.squareIsUs(rootX + sideLength, rootY + i)){
-                ret ++;
-            }
-            if (!this.squareIsUs(rootX + sideLength - i, rootY + sideLength)) {
-                ret ++;
-            }
-            if (!this.squareIsUs(rootX, rootY + sideLength - i)) {
-                ret ++;
-            }
-        }
-        return ret;
-    }
-
-    internalTendency(max, x, y) { // find the shortest distance within max to a square NOT occupied by this type.
-        if (x == undefined) {
-            x = this.cursorX;
-            y = this.cursorY;
-        }
-        for (var i = 0; i < max; i ++) {
-            if (this.shell(i, x, y) > 0) {
-                return i;
-            }
-        }
-        return max;
-    }
-}
-
-
-class GroundObject extends GameObject {
-    constructor(game, x, y, width, height) {
-        super(game, x, y, width, height, "solid");
-        this.isStatic = true;
-        this.frictionY = 0.3;
-    }
-
-    prerender(ctx) {
-        var tiler = new TilingWorker(ctx, this.constructor.name, this.x, this.y, this.game);
-        tiler.iterative(0, 0, this.width/this.game.blockSize, this.height/this.game.blockSize, () => {
-            tiler.flatColor("rgb(" + 255 * (1 - (tiler.internalTendency(4)/4)) + ", 0, 0)");
-        });
-    }
-}
-
-
 class Player extends GameObject {
     constructor(game, x, y, w, h) {
         super(game, x, y, w, h, "player");
@@ -351,6 +177,9 @@ class Game { // a single play. A new one of these is created every level.
         else if (this.player.touchingBottom) {
             this.player.jumpCycle = 0;
         }
+        else {
+            this.player.jumpCycle = Infinity;
+        }
         this.objects.forEach(item => {
             item.loop(delta);
         });
@@ -423,10 +252,25 @@ class Game { // a single play. A new one of these is created every level.
     }
 
     render(delta) {
-        this.ctx.fillStyle = "white";
+        this.ctx.fillStyle = "#9290FF";
         this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
         var tX = window.innerWidth/2 - this.player.width/2 - this.player.x;
         var tY = window.innerHeight/2 - this.player.height/2 - this.player.y;
+        if (this.minX != undefined) {
+            if (tX + this.minX > 0) {
+                tX = -this.minX;
+            }
+        }
+        if (this.maxY != undefined) {
+            if (tY + this.maxY < window.innerHeight) {
+                tY = window.innerHeight - this.maxY;
+            }
+        }
+        if (this.maxX != undefined) {
+            if (tX + this.maxX < window.innerWidth) {
+                tX = window.innerWidth - this.maxX;
+            }
+        }
         this.ctx.translate(tX, tY);
         this.objects.forEach(item => {
             item.draw(delta);
@@ -443,6 +287,10 @@ class Game { // a single play. A new one of these is created every level.
 
     ground(x, y, w, h) {
         return this.create(x, y, w, h, GroundObject);
+    }
+
+    brick(x, y, w, h) {
+        return this.create(x, y, w, h, BrickObject);
     }
 }
 
