@@ -1,0 +1,12 @@
+#game {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+
+* {
+    margin: 0px;
+    padding: 0px;
+}
