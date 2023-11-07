@@ -29,6 +29,11 @@ function clamp(min, val, max) {
 }
 
 
+function flatten(thing) { // lim[x -> inf] flatten(x) = 1; flatten(0) = 0.
+    return 1 - 1/(1 + thing);
+}
+
+
 class InputManager {
     constructor(element) {
         this.mouseX = 0;
@@ -127,7 +132,9 @@ class Game { // a single play. A new one of these is created every level.
     constructor(inputs) {
         inputs.subscribe({
             keyUp(key) {
-                
+                if (key == " ") {
+                    game.murica = !game.murica;
+                }
             },
             keyDown(key) {
                 
@@ -155,20 +162,33 @@ class Game { // a single play. A new one of these is created every level.
         this.ctx = document.getElementById("game").getContext("2d");
         this.airFrictionX = 0.99;
         this.airFrictionY = 1;
+        this.americanSoil = 0;
+        this.tY = 0;
+        this.tX = 0;
     }
 
     loop(delta) {
         this.render(delta);
+        if (this.murica) {
+            if (this.americanSoil < 1) {
+                this.americanSoil += delta/2;
+            }
+        }
+        else {
+            if (this.americanSoil > 0) {
+                this.americanSoil -= delta/2;
+            }
+        }
         var xImpulse = (this.player.touchingBottom ? 2000 : 200) * delta;
-        if (this.inputs.keysDown["ArrowRight"]) {
+        if (this.inputs.keysDown["ArrowRight"] || this.inputs.keysDown["d"]) {
             this.player.xv += xImpulse;
             this.player.reversed = false;
         }
-        if (this.inputs.keysDown["ArrowLeft"]) {
+        if (this.inputs.keysDown["ArrowLeft"] || this.inputs.keysDown["a"]) {
             this.player.xv -= xImpulse;
             this.player.reversed = true;
         }
-        if (this.inputs.keysDown["ArrowUp"]) {
+        if (this.inputs.keysDown["ArrowUp"] || this.inputs.keysDown["w"] || this.inputs.keysDown[" "]) {
             if (this.player.touchingBottom || this.player.jumpCycle < 0.3) {
                 this.player.yv = -400; // immediate impulse does NOT multiply by delta.
                 this.player.jumpCycle += delta;
@@ -254,32 +274,31 @@ class Game { // a single play. A new one of these is created every level.
     render(delta) {
         this.ctx.fillStyle = "#9290FF";
         this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-        var tX = window.innerWidth/2 - this.player.width/2 - this.player.x;
-        var tY = window.innerHeight/2 - this.player.height/2 - this.player.y;
+        this.tX = window.innerWidth/2 - this.player.width/2 - this.player.x;
+        this.tY = window.innerHeight/2 - this.player.height/2 - this.player.y;
         if (this.minX != undefined) {
-            if (tX + this.minX > 0) {
-                tX = -this.minX;
+            if (this.tX + this.minX > 0) {
+                this.tX = -this.minX;
             }
         }
         if (this.maxY != undefined) {
-            if (tY + this.maxY < window.innerHeight) {
-                tY = window.innerHeight - this.maxY;
+            if (this.tY + this.maxY < window.innerHeight) {
+                this.tY = window.innerHeight - this.maxY;
             }
         }
         if (this.maxX != undefined) {
-            if (tX + this.maxX < window.innerWidth) {
-                tX = window.innerWidth - this.maxX;
+            if (this.tX + this.maxX < window.innerWidth) {
+                this.tX = window.innerWidth - this.maxX;
             }
         }
-        this.ctx.translate(tX, tY);
+        this.ctx.translate(this.tX, this.tY);
         this.objects.forEach(item => {
             item.draw(delta);
         });
-        this.ctx.translate(-tX, -tY);
+        this.ctx.translate(-this.tX, -this.tY);
     }
 
     create(x, y, w, h, type) {
-        console.log(type);
         var thing = new type(this, x * this.blockSize, y * this.blockSize, w * this.blockSize, h * this.blockSize);
         this.objects.push(thing);
         return thing;
@@ -291,6 +310,10 @@ class Game { // a single play. A new one of these is created every level.
 
     brick(x, y, w, h) {
         return this.create(x, y, w, h, BrickObject);
+    }
+
+    capitol(x, y) {
+        return this.create(x, y, 4, 4, CapitolObject);
     }
 }
 
@@ -305,6 +328,7 @@ window.onresize = () => {
 window.onresize();
 
 function playLevel(number) {
+    document.getElementById("game").focus();
     document.getElementById("game").style.display = "";
     document.getElementById("entry").style.display = "none";
     game = new Game(inputs);
@@ -327,3 +351,5 @@ function moop() {
 }
 
 moop();
+
+playLevel(0); // when we make a nice welcome screen, delete this so the start button works

@@ -40,6 +40,11 @@ class PhysicsObject {
             this.touchingLeft = false;
             this.touchingRight = false;
         }
+        this.update();
+    }
+
+    update() {
+        
     }
 
     intersects(other) {

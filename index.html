@@ -7,11 +7,14 @@
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <canvas id="game" style="display: none;"></canvas>
+        <canvas id="game" style="display: none;" tabindex="-1"></canvas>
         <div id="entry">
             Welcome to Wokio! <button id="start" onclick="playLevel(0);">Start!</button>
         </div>
         <img style="display: none;" id="player_stand" src="res/wokioPlayer.png"/>
+        <img style="display: none;" id="american_soil" src="res/americansoil.png"/>
+        <img style="display: none;" id="confederate_soil" src="res/americansoil-confederate.png"/>
+        <img style="display: none;" id="capitol" src="res/capitol.png" />
         <script src="physics.js"></script>
         <script src="levels.js"></script>
         <script src="gameobject.js"></script>
