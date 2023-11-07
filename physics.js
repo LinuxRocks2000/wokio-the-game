@@ -59,7 +59,7 @@ class PhysicsObject {
             return false; // static objects can't collide with anything. other things collide with *them*.
         }
         if (this.specialCollisions.indexOf(other.type) != -1) {
-            if (this.specialCollision(other.type)) {
+            if (this.specialCollision(other.type, other)) {
                 return true;
             }
         }
@@ -67,6 +67,10 @@ class PhysicsObject {
             return true;
         }
         return false;
+    }
+
+    specialCollision(type, thing) {
+        
     }
 
     _hitTop(other) {

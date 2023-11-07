@@ -13,7 +13,7 @@ class GroundObject extends GameObject {
                 tiler.image((x + y) % 2 == 0 ? document.getElementById("american_soil") : document.getElementById("confederate_soil"));
             }
             else {
-                tiler.flatColor("rgb(" + (122 + 122 * (1 - (tiler.internalTendency(4)/4))) + ", 0, 0)");
+                tiler.flatColor("rgb(" + (122 * (1 - (tiler.internalTendency(3)/3))) + ", 0, 0)");
             }
         });
     }

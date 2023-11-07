@@ -34,6 +34,9 @@ function flatten(thing) { // lim[x -> inf] flatten(x) = 1; flatten(0) = 0.
 }
 
 
+var curLevel = 0;
+
+
 class InputManager {
     constructor(element) {
         this.mouseX = 0;
@@ -112,6 +115,13 @@ class Player extends GameObject {
         };
         this.reversed = false;
         this.jumpCycle = 0;
+        this.specialCollisions.push("capitol");
+    }
+    
+    specialCollision(type, thing) {
+        if (type == "capitol") {
+            playLevel(curLevel + 1);
+        }
     }
 
     animate(ctx) {
@@ -333,6 +343,7 @@ function playLevel(number) {
     document.getElementById("entry").style.display = "none";
     game = new Game(inputs);
     levels[number]();
+    curLevel = number;
 }
 
 var lastTime = 0;
