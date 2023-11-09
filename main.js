@@ -116,6 +116,8 @@ class Player extends GameObject {
         this.reversed = false;
         this.jumpCycle = 0;
         this.specialCollisions.push("capitol");
+        this.collisions.push("enemy");
+        this.maxHealth = 20;
     }
     
     specialCollision(type, thing) {
@@ -134,6 +136,10 @@ class Player extends GameObject {
             ctx.scale(-1, 1);
             ctx.translate(-this.width, 0);
         }
+    }
+
+    onDeath() {
+        window.location.reload();
     }
 }
 
@@ -189,6 +195,12 @@ class Game { // a single play. A new one of these is created every level.
                 this.americanSoil -= delta/2;
             }
         }
+        this.ctx.fillStyle = "black";
+        this.ctx.fillRect(window.innerWidth * 0.2 - 4, 6, window.innerWidth * 0.6 + 8, 28);
+        this.ctx.fillStyle = "blue";
+        this.ctx.fillRect(window.innerWidth * 0.2, 10, window.innerWidth * 0.6, 20);
+        this.ctx.fillStyle = "red";
+        this.ctx.fillRect(window.innerWidth * 0.2, 10, window.innerWidth * 0.6 * this.player.health/this.player.maxHealth, 20);
         var xImpulse = (this.player.touchingBottom ? 2000 : 200) * delta;
         if (this.inputs.keysDown["ArrowRight"] || this.inputs.keysDown["d"]) {
             this.player.xv += xImpulse;
@@ -202,6 +214,9 @@ class Game { // a single play. A new one of these is created every level.
             if (this.player.touchingBottom || this.player.jumpCycle < 0.3) {
                 this.player.yv = -400; // immediate impulse does NOT multiply by delta.
                 this.player.jumpCycle += delta;
+                if (this.player.jumpCycle >= 0.3) { // we just completed a full-height jump
+                    this.player.say("YEE-HAWW", 0.6);
+                }
             }
         }
         else if (this.player.touchingBottom) {
@@ -210,8 +225,14 @@ class Game { // a single play. A new one of these is created every level.
         else {
             this.player.jumpCycle = Infinity;
         }
-        this.objects.forEach(item => {
+        this.objects.forEach((item, i) => {
             item.loop(delta);
+            if (item.health < 0) {
+                item.onDeath();
+                if (item.health < 0) { // objects are allowed to keep themselves alive.
+                    this.objects.splice(i, 1);
+                }
+            }
         });
         for (var y = 0; y < this.objects.length - 1; y ++) {
             for (var x = y + 1; x < this.objects.length; x ++) {
@@ -324,6 +345,10 @@ class Game { // a single play. A new one of these is created every level.
 
     capitol(x, y) {
         return this.create(x, y, 4, 4, CapitolObject);
+    }
+
+    alGoremba(x, y) {
+        return this.create(x, y, 1, 1, AlGorembaEnemy);
     }
 }
 

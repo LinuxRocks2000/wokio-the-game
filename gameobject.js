@@ -3,11 +3,47 @@ class GameObject extends PhysicsObject { // superclass
         super(game, x, y, width, height, type);
         this.needsArtRefresh = true;
         this.prerendered = true;
+        this.maxHealth = 0;
+        this.cSpeech = "";
+        this.speechTimeLeft = 0;
+    }
+
+    say(thing, duration) {
+        if (duration == undefined) {
+            duration = 2;
+        }
+        this.cSpeech = thing;
+        this.speechTimeLeft = duration;
+    }
+
+    harm(amount) {
+        this.health -= amount;
+    }
+
+    heal(amount) {
+        this.health += amount;
+    }
+
+    onDeath() {
+
     }
 
     draw(delta) { // low-level function: do not override
         if (this.x + this.game.tX + this.width < 0 || this.x + this.game.tX > window.innerWidth || this.y + this.game.tY + this.height < 0 || this.y + this.game.tY > window.innerHeight) {
             return;
+        }
+        if (this.health == undefined) {
+            this.health = this.maxHealth;
+        }
+        if (!this.isStatic && this.x + this.width < this.game.minX || this.x > this.game.maxX || this.y + this.height < this.game.minY || this.y > this.game.maxY) {
+            this.health = -1;
+        }
+        if (this.speechTimeLeft > 0) {
+            this.game.ctx.fillStyle = "white";
+            this.game.ctx.font = "16px Pixelify";
+            this.game.ctx.fillText(this.cSpeech, this.x + this.width, this.y);
+            this.game.ctx.fillRect(this.x + this.width, this.y, 100 * this.speechTimeLeft, 5);
+            this.speechTimeLeft -= delta;
         }
         if (this.prerendered) {
             var prer = getPrerender(this.constructor.name, this.width, this.height);

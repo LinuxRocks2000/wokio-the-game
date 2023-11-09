@@ -51,3 +51,61 @@ class CapitolObject extends GameObject {
         ctx.drawImage(document.getElementById("capitol"), 0, 0);
     }
 }
+
+
+class AlGorembaEnemy extends GameObject {
+    constructor (game, x, y, w, h) {
+        super(game, x, y, w, h, "enemy");
+        this.specialCollisions.push("player");
+        this.maxHealth = 1;
+        this.prerendered = false;
+        this.isStatic = false;
+        this.collisions.push("player");
+        this.direction = true;
+    }
+
+    animate(ctx, delta) {
+        if (this.xv < 0) {
+            ctx.translate(this.width, 0);
+            ctx.scale(-1, 1);
+        }
+        ctx.drawImage(document.getElementById(window.performance.now() % 300 > 150 ? "algoremba1" : "algoremba0"), 0, 0);
+        if (this.xv < 0) {
+            ctx.scale(-1, 1);
+            ctx.translate(-this.width, 0);
+        }
+    }
+
+    topCollision(thing) {
+        if (thing.type == "player") {
+            this.health = -1;
+            thing.yv = -700;
+            this.game.player.heal(1);
+        }
+    }
+
+    rightCollision(thing) {
+        if (thing.type == "player") {
+            thing.harm(2);
+            this.say("It's an inconvenient truth!");
+        }
+        this.direction = false;
+    }
+
+    leftCollision(thing) {
+        if (thing.type == "player") {
+            thing.harm(2);
+            this.say("It's an inconvenient truth!");
+        }
+        this.direction = true;
+    }
+
+    update(delta) {
+        if (this.direction) {
+            this.xv = 100;
+        }
+        else {
+            this.xv = -100;
+        }
+    }
+}

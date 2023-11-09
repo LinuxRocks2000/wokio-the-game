@@ -10,3 +10,8 @@
     margin: 0px;
     padding: 0px;
 }
+
+@font-face {
+    font-family: Pixelify;
+    src: url(res/PixelifySans.ttf);
+}
